@@ -14,15 +14,15 @@ exports.handler = function (event, context) {
     .digest("base64");
 
   //署名の検証(https://developers.line.biz/ja/reference/messaging-api/#signature-validation)
-  let checkHeader;
+  let xLineSignature;
   const headers = event.headers || {};
   //大文字・小文字は予告なく変更あるらしい(https://developers.line.biz/ja/reference/messaging-api/#request-headers)
   if (headers["x-line-signature"]) {
-    checkHeader = headers["x-line-signature"];
+    xLineSignature = headers["x-line-signature"];
   } else if (headers["X-Line-Signature"]) {
-    checkHeader = headers["X-Line-Signature"];
+    xLineSignature = headers["X-Line-Signature"];
   }
-  if (signature !== checkHeader) {
+  if (signature !== xLineSignature) {
     const response = {
       statusCode: 403,
       body: JSON.stringify({
@@ -35,7 +35,9 @@ exports.handler = function (event, context) {
     let response = {
       statusCode: 200,
       headers: { "X-Line-Status": "OK" },
-      body: '{"result":"connect check"}',
+      body: JSON.stringify({
+        result: "connect check"
+      }),
     };
     return response;
   } else {
@@ -47,8 +49,10 @@ exports.handler = function (event, context) {
     client.replyMessage(replyToken, message).then(() => {
       const response = {
         statusCode: 200,
-        headers: { "X-Line-Status" : "OK"},
-        body: '{"result":"completed"}'
+        headers: { "X-Line-Status" : "OK" },
+        body: JSON.stringify({
+          result :"completed"
+        })
       };
       return response;
     }).catch(error => {
